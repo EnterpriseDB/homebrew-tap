@@ -1,4 +1,4 @@
-# The Cisco Open Homebrew Tap
+# The EnterpriseDB Homebrew Tap
 
 This repository contains a [Homebrew](https://brew.sh/) tap (3rd party repository) for open source projects by EnterpriseDB.
 
