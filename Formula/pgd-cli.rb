@@ -20,7 +20,7 @@ class PgdCli < Formula
     end
     if Hardware::CPU.intel?
       url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/files/pgd-cli_5.4.0_darwin_amd64.tar.gz", using: HomebrewCurlDownloadStrategy
-      sha256 "da3910cea70171d317c7f68a87f14f341043248819546be6ae0fb2556c0c9e84"
+      sha256 "4a441969da36a844932ae4868fc393ed93019cca3dab7f846828e61e66ba7f2c"
 
       def install
         bin.install "pgd"
