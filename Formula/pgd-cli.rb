@@ -9,7 +9,7 @@ class PgdCli < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/files/pgd-cli_5.4.0_darwin_arm64.tar.gz", using: HomebrewCurlDownloadStrategy
-      sha256 "f7652c7eabba44be30ca24d49decb46826468e180e4637365d90b761afffd446"
+      sha256 "b5aa5b706e5c49407b251033cec09b7eb9ec9c5c998314576705b2f6c695c6f3"
 
       def install
         bin.install "pgd"
@@ -20,7 +20,7 @@ class PgdCli < Formula
     end
     if Hardware::CPU.intel?
       url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/files/pgd-cli_5.4.0_darwin_amd64.tar.gz", using: HomebrewCurlDownloadStrategy
-      sha256 "4a441969da36a844932ae4868fc393ed93019cca3dab7f846828e61e66ba7f2c"
+      sha256 "71e9fb22f908371843d3079561128c6411473780e9b763c564fa50d2de68e1a7"
 
       def install
         bin.install "pgd"
