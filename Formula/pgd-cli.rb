@@ -4,7 +4,7 @@
 class PgdCli < Formula
   desc "Postgres Distributed CLI"
   homepage "https://github.com/enterprisedb/homebrew-tap"
-  version "5.4.0"
+  version "5.5.0"
 
   on_macos do
     if Hardware::CPU.arm?
