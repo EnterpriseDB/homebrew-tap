@@ -33,6 +33,7 @@ The following packages are published through the EnterpriseDB Homebrew Tap:
 | Formula | Description |
 | ------- | ----------- |
 | [Formula/pgd-cli.rb](Formula/pgd-cli.rb) | pgd-cli - EnterpriseDB PGD CLI Tool | 
+| [Formula/edbctl.rb](Formula/edbctl.rb) | edbctl - EnterpriseDB HM edbctl CLI Tool | 
 
 ## Support
 
