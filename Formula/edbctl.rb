@@ -4,7 +4,7 @@
 class Edbctl < Formula
   desc "EnterpriseDB HM edbctl CLI Tool"
   homepage "https://github.com/enterprisedb/homebrew-tap"
-  version "1.2.1"
+  version "1.2.0"
 
   on_macos do
     depends_on "libpq"
