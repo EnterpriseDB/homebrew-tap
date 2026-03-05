@@ -1,0 +1,186 @@
+name: Test Homebrew Formulas/Casks
+
+on:
+  pull_request:
+    types: [ready_for_review]
+    branches:
+      - main
+    paths:
+      - 'Formula/**.rb'
+      - 'Casks/**.rb'
+
+jobs:
+  detect-architectures:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has-changes: ${{ steps.set-matrix.outputs.has-changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files and required architectures
+        id: set-matrix
+        run: |
+          # Get list of changed Homebrew formula/cask .rb files
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...HEAD | grep -E '^(Formula|Casks)/.*\.rb$' || true)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No Formula/ or Casks/ .rb files changed"
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "matrix={\"os\":[]}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          # Detect architecture support across all changed files
+          SUPPORTS_INTEL=false
+          SUPPORTS_ARM=false
+          for FILE in $CHANGED_FILES; do
+            echo "Analyzing: $FILE"
+            CONTENT=$(cat "$FILE")
+            # Check for explicit Intel/x86_64 restriction
+            if echo "$CONTENT" | grep -qE "depends_on arch: :x86_64"; then
+              SUPPORTS_INTEL=true
+              echo "  → Explicit Intel/x86_64 arch restriction detected"
+            fi
+            # Check for explicit ARM/arm64 restriction
+            if echo "$CONTENT" | grep -qE "depends_on arch: :arm64"; then
+              SUPPORTS_ARM=true
+              echo "  → Explicit ARM/arm64 arch restriction detected"
+            fi
+          done
+          # Build matrix based on detected architectures
+          RUNNERS=()
+          if [ "$SUPPORTS_INTEL" = true ]; then
+            RUNNERS+=("macos-15-intel")
+          fi
+          if [ "$SUPPORTS_ARM" = true ]; then
+            RUNNERS+=("macos-15")
+          fi
+          # If no architecture detected, test on both (safeguard)
+          if [ ${#RUNNERS[@]} -eq 0 ]; then
+            echo "No architecture constraints detected - testing on both"
+            RUNNERS=("macos-15-intel" "macos-15")
+          fi
+          # Convert to JSON array
+          MATRIX_JSON=$(printf '%s\n' "${RUNNERS[@]}" | jq -R . | jq -s -c '{os: .}')
+          echo "Matrix: $MATRIX_JSON"
+          echo "has-changes=true" >> $GITHUB_OUTPUT
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+
+  test:
+    needs: detect-architectures
+    # Only run if there are changes and PR is not a draft
+    if: needs.detect-architectures.outputs.has-changes == 'true' && github.event.pull_request.draft == false
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      matrix: ${{ fromJSON(needs.detect-architectures.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Display test environment
+        run: |
+          echo "Runner: ${{ matrix.os }}"
+          echo "Architecture: $(uname -m)"
+          echo "macOS Version: $(sw_vers -productVersion)"
+
+      - name: Set up Homebrew
+        run: |
+          # Ensure Homebrew is up to date
+          brew update
+
+      - name: Detect changed files
+        id: changed-files
+        run: |
+          # Get list of changed formula/cask .rb files
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...HEAD | grep '\.rb$' | grep -E '^(Formula|Casks)/' || true)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No .rb files changed"
+            echo "files=" >> $GITHUB_OUTPUT
+          else
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+            # Convert to space-separated list
+            FILES_LIST=$(echo "$CHANGED_FILES" | tr '\n' ' ')
+            echo "files=$FILES_LIST" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up tap
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          # Get the repository name (owner/repo format)
+          REPO_NAME="${{ github.repository }}"
+          # Create the tap directory structure
+          # Homebrew expects taps in $(brew --repo)/Library/Taps/[owner]/homebrew-[tap]
+          TAP_DIR="$(brew --repo)/Library/Taps/${REPO_NAME%/*}"
+          mkdir -p "$TAP_DIR"
+          # Create a symlink to this repo with the proper naming convention
+          # Extract tap name from repo (e.g., homebrew-tap-test -> tap-test)
+          REPO_BASENAME=$(basename "$REPO_NAME")
+          if [[ "$REPO_BASENAME" == homebrew-* ]]; then
+            TAP_NAME="${REPO_BASENAME#homebrew-}"
+          else
+            TAP_NAME="$REPO_BASENAME"
+          fi
+          TARGET="$TAP_DIR/homebrew-$TAP_NAME"
+          if [ -e "$TARGET" ] || [ -L "$TARGET" ]; then
+            rm -rf "$TARGET"
+          fi
+          ln -s "$GITHUB_WORKSPACE" "$TARGET"
+          echo "Tap set up at: $TARGET"
+          echo "TAP_NAME=${REPO_NAME%/*}/$TAP_NAME" >> $GITHUB_ENV
+
+      - name: Test install and uninstall
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          FILES="${{ steps.changed-files.outputs.files }}"
+          EXIT_CODE=0
+          for FILE in $FILES; do
+            echo "=========================================="
+            echo "Testing: $FILE"
+            echo "=========================================="
+            # Extract the formula/cask name from the file path
+            BASENAME=$(basename "$FILE" .rb)
+            # Determine if it's a cask or formula based on directory
+            if [[ "$FILE" == Casks/* ]]; then
+              TYPE="cask"
+              INSTALL_CMD="brew install --cask"
+            else
+              TYPE="formula"
+              INSTALL_CMD="brew install"
+            fi
+            echo "Type: $TYPE"
+            echo "Name: $BASENAME"
+            # Test installation
+            echo "Running: $INSTALL_CMD $TAP_NAME/$BASENAME"
+            if $INSTALL_CMD "$TAP_NAME/$BASENAME"; then
+              echo "✅ Successfully installed $TYPE: $BASENAME"
+              # Test uninstallation
+              if [ "$TYPE" = "cask" ]; then
+                brew uninstall --cask "$BASENAME"
+              else
+                brew uninstall "$BASENAME"
+              fi
+              echo "✅ Successfully uninstalled $TYPE: $BASENAME"
+            else
+              echo "❌ Failed to install $TYPE: $BASENAME"
+              EXIT_CODE=1
+            fi
+            echo ""
+          done
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Some installations failed"
+            exit 1
+          else
+            echo "✅ All installations successful"
+          fi
