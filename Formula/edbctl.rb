@@ -12,7 +12,7 @@ class Edbctl < Formula
 
   if Hardware::CPU.intel?
     url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/1.7.0-1/edbctl_1.7.0_darwin_amd64.tar.gz", using: CurlDownloadStrategy
-    sha256 "dd68352938d3a33e8e62b74716c237bebc29dd092393f1be43e18448f9b28dde"
+    sha256 "2894d13f434a095ce5001b73ab427f0d6e6536833f333c0206b0e55d23dcac96"
 
     define_method(:install) do
       bin.install "edbctl"
@@ -20,7 +20,7 @@ class Edbctl < Formula
   end
   if Hardware::CPU.arm?
     url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/1.7.0-1/edbctl_1.7.0_darwin_arm64.tar.gz", using: CurlDownloadStrategy
-    sha256 "3b0a64b3bc14047375ed6b090e967b4cb95fbeb4c975e34d4a70ac195c5f3751"
+    sha256 "1f1acbe7482a55104a4563a69c974de29c9256e25867c90320097d1d07c4b7fd"
 
     define_method(:install) do
       bin.install "edbctl"
