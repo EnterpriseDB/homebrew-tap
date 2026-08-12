@@ -5,22 +5,22 @@
 class Edbctl < Formula
   desc "EnterpriseDB HM edbctl CLI Tool"
   homepage "https://github.com/EnterpriseDB/homebrew-tap"
-  version "1.8.0"
+  version "1.8.1"
 
   depends_on "libpq"
   depends_on :macos
 
   if Hardware::CPU.intel?
-    url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/1.8.0-1/edbctl_1.8.0_darwin_amd64.tar.gz", using: CurlDownloadStrategy
-    sha256 "009b85c171a808c7a0659ad727263ce583a8cabe117899bec9cc9d606d1c4e2f"
+    url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/1.8.1-1/edbctl_1.8.1_darwin_amd64.tar.gz", using: CurlDownloadStrategy
+    sha256 "670039f9a7bc2521678425939f7f4ea1e2d0686e1d6059492eaeb25c7ce0b340"
 
     define_method(:install) do
       bin.install "edbctl"
     end
   end
   if Hardware::CPU.arm?
-    url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/1.8.0-1/edbctl_1.8.0_darwin_arm64.tar.gz", using: CurlDownloadStrategy
-    sha256 "81c44ce928aee1ce1e34e59d73f5aeeabf19f15ebc980ef1153b737d0e7e4a4d"
+    url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/1.8.1-1/edbctl_1.8.1_darwin_arm64.tar.gz", using: CurlDownloadStrategy
+    sha256 "9cb7e1df8283bbce11bb02ae899bd631dbbb9ab7d41675289146fde8178b6294"
 
     define_method(:install) do
       bin.install "edbctl"
