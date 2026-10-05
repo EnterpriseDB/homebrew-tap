@@ -97,6 +97,11 @@ jobs:
         run: |
           # Ensure Homebrew is up to date
           brew update
+          # The runner image links the deprecated openssl@1.1 into the
+          # Homebrew prefix, so upgrading openssl@3 as a dependency fails
+          # its `brew link` step and `brew install` exits non-zero even
+          # though the formula under test installed fine.
+          brew unlink openssl@1.1 2>/dev/null || true
 
       - name: Detect changed files
         id: changed-files
