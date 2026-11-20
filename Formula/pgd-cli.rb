@@ -4,14 +4,14 @@
 class PgdCli < Formula
   desc "Postgres Distributed CLI"
   homepage "https://github.com/enterprisedb/homebrew-tap"
-  version "6.5.0"
+  version "6.5.1"
 
   on_macos do
     depends_on "libpq"
 
     if Hardware::CPU.arm?
-      url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/6.5.0-1/pgd-cli_6.5.0_darwin_arm64.tar.gz", using: CurlDownloadStrategy
-      sha256 "fc39011740ee71c3405b6f4b82ab3f9936c69864f2e598dce0e0a78924d426ea"
+      url "https://downloads.enterprisedb.com/public/homebrew-edb/raw/versions/6.5.1-1/pgd-cli_6.5.1_darwin_arm64.tar.gz", using: CurlDownloadStrategy
+      sha256 "ca1c768e24234946fc8d11be6f14df55c54cad9ccfb9ff367a83fde2d601caa3"
 
       def install
         bin.install "pgd"
